@@ -1,4 +1,5 @@
 import {useState} from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 function Login({onLogin, sessionExpired}){
     const [username, setUsername] = useState("");
     const[password, setPassword] = useState("");
@@ -8,7 +9,7 @@ function Login({onLogin, sessionExpired}){
         e.preventDefault();
         setError("");
         try{
-            const response = await fetch("http://127.0.0.1:8080/login",{
+            const response = await fetch(`${API_URL}/login`,{
                 method: "POST",
                 headers: {"Content-Type": "application/json",},
                 credentials: "include",

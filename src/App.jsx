@@ -1,6 +1,7 @@
 import Login from "./Login";
 import {useState, useEffect, useRef} from 'react'
 import './App.css';
+const API_URL = import.meta.env.VITE_API_URL;
 function App(){
   const[isLoggedIn, setIsLoggedIn] = useState(false);
   const[authChecked, setAuthChecked] = useState(false);
@@ -20,7 +21,7 @@ function App(){
 
   const getStudents = async () => {
     try{
-    const response = await fetch("http://127.0.0.1:8080/students",{
+    const response = await fetch(`${API_URL}/students`,{
       method: "GET",
       credentials: "include",
     });
@@ -50,7 +51,7 @@ function App(){
   useEffect(() => {
     const checkLogin = async() => {
       try{
-        const response = await fetch("http://127.0.0.1:8080/me",
+        const response = await fetch(`${API_URL}/me`,
           {
             credentials:"include"
           }
@@ -89,7 +90,7 @@ function App(){
   };
   const handleLogout = async() => {
     try{
-      await fetch("http://127.0.0.1:8080/logout",{
+      await fetch(`${API_URL}/logout`,{
         method: "POST",
         credentials: "include",
       });
@@ -193,7 +194,7 @@ function App(){
     let response;
     if(isEditing){
       response = await fetch(
-        `http://127.0.0.1:8080/students/${student.id}`,
+        `${API_URL}/students/${student.id}`,
         {
           method:"PUT",
           headers: {
@@ -206,7 +207,7 @@ function App(){
     }
     else{
       response = await fetch(
-        "http://127.0.0.1:8080/students",
+        `${API_URL}/students`,
         {
           method: "POST",
           headers: {
@@ -255,7 +256,7 @@ function App(){
     }
     setError("");
     setSuccess("");
-    const response=await fetch(`http://127.0.0.1:8080/students/${id}`,{
+    const response=await fetch(`${API_URL}/students/${id}`,{
       method: "DELETE",
       credentials: "include",
     });
