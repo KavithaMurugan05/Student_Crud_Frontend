@@ -47,6 +47,7 @@ function App(){
   const[statusFilter, setStatusFilter] = useState("");
   const[success, setSuccess] = useState("");
   const[currentPage, setCurrentPage] = useState(1);
+  const [dobFocused, setDobFocused]  = useState(false);
   const studentsPerPage = 7;
   const studentListRef = useRef(null);
 
@@ -248,6 +249,7 @@ function App(){
       status: '',
       gender: ''
     });
+    setDobFocused(false);
     setValidationErrors(({}));
     setIsEditing(false);
   };
@@ -299,6 +301,7 @@ function App(){
       status: '',
       gender: ''
     });
+    setDobFocused(false);
     setValidationErrors({});
     setError("");
     setIsEditing(false);
