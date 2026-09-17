@@ -462,15 +462,19 @@ function App(){
             </p>
           )}
         </div>
-        <div className="input-group dob-group">
-          {!student.dob && (
-            <span className="dob-placeholder-text">dd-mm-yyyy</span>
-          )}
+        <div className="input-group">
           <input
-            type="date"
+            type={student.dob || dobFocused ? "date" : "text"}
             name="dob"
+            placeholder="dd-mm-yyyy"
             value={student.dob}
             className={validationErrors.dob ? "input-error" : ""}
+            onFocus={() => setDobFocused(true)}
+            onBlur={() => {
+              if(!student.dob){
+                setDobFocused(false);
+              }
+            }}
             onChange={handleChange}
           />
           {validationErrors.dob && (

@@ -108,28 +108,16 @@ h1 {
   background: #f8fafc;
   transition: 0.3s;
 }
+.student-form input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
 .student-form input:focus {
   border-color: #050651;
   background: #ffffff;
   box-shadow:
     0 0 0 3px
     rgba(99, 102, 241, 0.15);
-}
-.dob-group {
-    position: relative;
-}
-.dob-group input[type="date"] {
-    color: #000000;
-}
-.dob-placeholder-text {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    font-size: 15px;
-    pointer-events: none;
-    z-index: 1;
 }
 .student-form select {
   color: #000000;
