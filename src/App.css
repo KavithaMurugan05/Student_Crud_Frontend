@@ -552,6 +552,12 @@ h2 {
     font-weight: bold;
     transform: scale(1.05);
 }
+.dob-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
 @media (max-width: 768px) {
   h1 {
     font-size: 30px;

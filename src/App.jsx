@@ -463,6 +463,7 @@ function App(){
           )}
         </div>
         <div className="input-group">
+        <label className="dob-label">Date of Birth</label>
           <input
             type="date"
             name="dob"
