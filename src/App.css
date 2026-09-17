@@ -115,11 +115,21 @@ h1 {
     0 0 0 3px
     rgba(99, 102, 241, 0.15);
 }
-.student-form input[type="date"] {
-  color: #000000;
+.dob-group {
+    position: relative;
 }
-.student-form input[type="date"].dob-placeholder {
-  color: #64748b;
+.dob-group input[type="date"] {
+    color: #000000;
+}
+.dob-placeholder-text {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 15px;
+    pointer-events: none;
+    z-index: 1;
 }
 .student-form select {
   color: #000000;
@@ -552,12 +562,7 @@ h2 {
     font-weight: bold;
     transform: scale(1.05);
 }
-.dob-label {
-    font-size: 15px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-}
+
 @media (max-width: 768px) {
   h1 {
     font-size: 30px;

@@ -462,8 +462,10 @@ function App(){
             </p>
           )}
         </div>
-        <div className="input-group">
-        <label className="dob-label">Date of Birth</label>
+        <div className="input-group dob-group">
+          {!student.dob && (
+            <span className="dob-placeholder-text">dd-mm-yyyy</span>
+          )}
           <input
             type="date"
             name="dob"
