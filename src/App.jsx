@@ -46,6 +46,8 @@ function App(){
   const[sortOption, setSortOption] = useState("name-asc");
   const[statusFilter, setStatusFilter] = useState("");
   const[success, setSuccess] = useState("");
+  const[currentPage, setCurrentPage] = useState(1);
+  const studentsPerPage = 7;
   const studentListRef = useRef(null);
 
   useEffect(() => {
@@ -82,6 +84,9 @@ function App(){
       return() => clearTimeout(timer);
     }
   },[success]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortOption, statusFilter]);
 
   const handleLogin = (username) => {
     setSessionExpired(false);
@@ -323,6 +328,12 @@ function App(){
     }
     return 0;
   });
+
+  const totalPages = Math.ceil(sortedStudents.length/studentsPerPage);
+  const startIndex = (currentPage-1)*studentsPerPage;
+  const currentStudents = sortedStudents.slice(
+    startIndex, startIndex + studentsPerPage);
+
   const totalStudents = students.length;
   const activeStudents = students.filter(
     (student) => student.status === "Active"
@@ -333,7 +344,12 @@ function App(){
   const graduatedStudents = students.filter(
     (student) => student.status === "Graduated"
   ).length;
-
+  useEffect(() => {
+    if(totalPages > 0 && currentPage > totalPages){
+      setCurrentPage(totalPages);
+    }
+    },[currentPage, totalPages]);
+    
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
     setTimeout(()=>{
@@ -561,8 +577,8 @@ function App(){
       )}
       <div className="student-list" ref={studentListRef}>
       {
-        sortedStudents.length>0 ? (
-        sortedStudents.map((s) => (
+        currentStudents.length>0 ? (
+        currentStudents.map((s) => (
           <div className="student-card"
           key={s.id}>
             <div className="student-info">
@@ -589,6 +605,18 @@ function App(){
           </p>
       )}
       </div>
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}>Previous</button>
+          {Array.from({length: totalPages}, (_, index) => (
+            <button key={index+1}
+              className={currentPage === index+1 ? "active-page" : ""}
+              onClick={() => setCurrentPage(index+1)}>{index+1}</button>
+          ))}
+          <button onClick={()=>setCurrentPage(currentPage+1)}
+              disabled={currentPage===totalPages}>Next</button>
+        </div>)}
       {selectedStudent && (
   <div className="profile-overlay">
     <div className="profile-card">

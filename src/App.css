@@ -529,6 +529,29 @@ h2 {
   font-size: 14px;
   font-weight: 600;
 }
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 25px;
+    margin-bottom: 20px;
+}
+.pagination button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.pagination .active-page {
+    font-weight: bold;
+    transform: scale(1.05);
+}
 @media (max-width: 768px) {
   h1 {
     font-size: 30px;
