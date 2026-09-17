@@ -468,7 +468,7 @@ function App(){
             type="date"
             name="dob"
             value={student.dob}
-            className={`${student.dob ? "" : "dob-placeholder"} ${validationErrors.dob ? "input-error" : ""}`}
+            className={validationErrors.dob ? "input-error" : ""}
             onChange={handleChange}
           />
           {validationErrors.dob && (
