@@ -1,10 +1,12 @@
 import Login from "./Login";
 import {useState, useEffect, useRef} from 'react'
 import './App.css';
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL, fetchWithTimeout, waitForServer, sleep } from "./api";
 function App(){
   const[isLoggedIn, setIsLoggedIn] = useState(false);
-  const[authChecked, setAuthChecked] = useState(false);
+  const[bootStatus, setBootStatus] = useState("loading"); // loading | failed | ready
+  const[serverWaking, setServerWaking] = useState(false);
+  const[bootAttempt, setBootAttempt] = useState(0);
   const[loggedInUser, setLoggedInUser] = useState("");
   const[sessionExpired, setSessionExpired] = useState(false);
   const[student,setStudent] = useState({
@@ -20,23 +22,29 @@ function App(){
   const[students,setStudents] = useState([]);
 
   const getStudents = async () => {
+  for(let attempt = 1; attempt <= 3; attempt++){
     try{
-    const response = await fetch(`${API_URL}/students`,{
-      method: "GET",
-      credentials: "include",
-    });
-    if(handleAuthResponse(response)){
-      return;
+      const response = await fetchWithTimeout(`${API_URL}/students`,{
+        method: "GET",
+        credentials: "include",
+      }, 30000);
+      if(handleAuthResponse(response)){
+        return;
+      }
+      if(response.ok){
+        const data = await response.json();
+        setStudents(data);
+        setError("");
+        return;
+      }
+    }catch{
     }
-    if(response.ok){
-    const data = await response.json();
-    setStudents(data);}
-    else{
-      setError("Server error. Please try again later");
-    }}catch(error){
-      setError("Unable to connect to server. Please check your connection");
+    if(attempt < 3){
+      await sleep(2500);
     }
-  };
+  }
+  setError("Could not load students. Please check your connection and refresh the page.");
+};
   
   const[isEditing, setIsEditing] = useState(false);
   const[selectedStudent, setSelectedStudent] = useState(null);
@@ -52,26 +60,47 @@ function App(){
   const studentListRef = useRef(null);
 
   useEffect(() => {
-    const checkLogin = async() => {
-      try{
-        const response = await fetch(`${API_URL}/me`,
-          {
-            credentials:"include"
-          }
-        );
-        if(response.ok){
-          const data = await response.json();
+  let cancelled = false;
+  const bootApp = async() => {
+    const serverReady = await waitForServer(() => {
+      if(!cancelled){
+        setServerWaking(true);
+      }
+    });
+    if(cancelled){
+      return;
+    }
+    if(!serverReady){
+      setBootStatus("failed");
+      return;
+    }
+    try{
+      const response = await fetchWithTimeout(`${API_URL}/me`,
+        { credentials:"include" }, 30000);
+      if(response.ok){
+        const data = await response.json();
+        if(!cancelled){
           setLoggedInUser(data.username);
           setIsLoggedIn(true);
         }
-      }catch(error){
-        console.error("Session check failed: ", error);
-      }finally{
-        setAuthChecked(true);
       }
-    };
-    checkLogin();
-  },[]);
+    }catch(err){
+      console.error("Session check failed: ", err);
+    }
+    if(!cancelled){
+      setBootStatus("ready");
+    }
+  };
+  bootApp();
+  return () => {
+    cancelled = true;
+  };
+  },[bootAttempt]);
+  const handleRetryBoot = () => {
+  setServerWaking(false);
+  setBootStatus("loading");
+  setBootAttempt((n) => n + 1);
+  };
   useEffect(() => {
     if(isLoggedIn){
       getStudents();
@@ -115,7 +144,7 @@ function App(){
     setStudents([]);
   };
   const handleAuthResponse = (response) => {
-    if(response.status === 401 || response.status === 403){
+    if(response.status === 401){
       handleSessionExpired();
       return true;
     }
@@ -198,7 +227,8 @@ function App(){
       return;
     }
     let response;
-    if(isEditing){
+    try{
+      if(isEditing){
       response = await fetch(
         `${API_URL}/students/${student.id}`,
         {
@@ -224,6 +254,11 @@ function App(){
         }
       );
     }
+    }catch{
+      setError("Unable to connect to server. Please try again.");
+      return;
+    }
+    
     if(handleAuthResponse(response)){
       return;
     }
@@ -363,8 +398,28 @@ function App(){
     },0);
   };
 
-  if(!authChecked){
-    return null;
+  if(bootStatus === "loading"){
+  return (
+    <div className="loading-screen">
+      <div className="spinner"></div>
+      <h2>Loading Student Data Management System...</h2>
+      {serverWaking && (
+        <p>The server is waking up after being idle. This can take up to a
+        minute. Please do not refresh the page.</p>
+      )}
+    </div>
+  );
+  }
+  if(bootStatus === "failed"){
+  return (
+    <div className="loading-screen">
+      <h2>Unable to reach the server</h2>
+      <p>The server did not respond. Please check your internet connection and try again.</p>
+      <button className="login-button loading-retry" onClick={handleRetryBoot}>
+        Try again
+      </button>
+    </div>
+  );
   }
   if(!isLoggedIn){
     return (

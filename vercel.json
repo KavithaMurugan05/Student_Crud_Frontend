@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://student-crud-backend-0mep.onrender.com/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "0" }]
+    }
+  ]
+}
