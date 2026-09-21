@@ -47,6 +47,7 @@ function App(){
 };
   
   const[isEditing, setIsEditing] = useState(false);
+  const[submitting, setSubmitting] = useState(false);
   const[selectedStudent, setSelectedStudent] = useState(null);
   const[error, setError] = useState("");
   const[validationErrors, setValidationErrors] = useState({});
@@ -58,6 +59,10 @@ function App(){
   const [dobFocused, setDobFocused]  = useState(false);
   const studentsPerPage = 7;
   const studentListRef = useRef(null);
+  const successMessageRef = useRef(null);
+  const studentFormRef = useRef(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   useEffect(() => {
   let cancelled = false;
@@ -106,14 +111,21 @@ function App(){
       getStudents();
     }
   },[isLoggedIn]);
-  useEffect(()=>{
-    if(success){
-      const timer=setTimeout(()=>{
-        setSuccess("");
-      },3000);
-      return() => clearTimeout(timer);
+  useEffect(() => {
+  if(success){
+    if(success === "Student deleted successfully"){
+      setTimeout(() => {
+        successMessageRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }, 0);
     }
-  },[success]);
+    const timer = setTimeout(() => {
+      setSuccess("");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }}, [success]);
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, sortOption, statusFilter]);
@@ -226,6 +238,7 @@ function App(){
     if(!validateStudent()){
       return;
     }
+    setSubmitting(true);
     let response;
     try{
       if(isEditing){
@@ -256,6 +269,7 @@ function App(){
     }
     }catch{
       setError("Unable to connect to server. Please try again.");
+      setSubmitting(false);
       return;
     }
     
@@ -264,8 +278,10 @@ function App(){
     }
     if(!response.ok){
       await handleBackendError(response);
+      setSubmitting(false);
       return;
     }
+    setSubmitting(false);
     if(isEditing){
       setSuccess("Student updated successfully");
     }
@@ -288,28 +304,31 @@ function App(){
     setValidationErrors(({}));
     setIsEditing(false);
   };
-
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this student?"
-    );
-    if(!confirmDelete){
-      return;
+    setDeleteConfirmId(id);
     }
-    setError("");
-    setSuccess("");
+    const confirmDelete = async (id) => {
+      setDeletingId(id);
+      setError("");
+      setSuccess("");
+      setError("");
+      setSuccess("");
     const response=await fetch(`${API_URL}/students/${id}`,{
       method: "DELETE",
       credentials: "include",
     });
     if(handleAuthResponse(response)){
+      setDeletingId(null);
       return;
     }
     if(!response.ok){
       await handleBackendError(response);
+      setDeletingId(null);
       return;
     }
     setSuccess("Student deleted successfully");
+    setDeleteConfirmId(null);
+    setDeletingId(null);
     getStudents();
   };
   const handleViewProfile = (studentData) => {
@@ -320,10 +339,12 @@ function App(){
     setValidationErrors({});
     setError("");
     setIsEditing(true);
-    window.scrollTo({
-      top:0,
-      behavior:"smooth"
+    setTimeout(()=>{
+      studentFormRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
     });
+    }, 0); 
   };
   const handleCancel = () => {
     setStudent({
@@ -358,11 +379,11 @@ function App(){
     if(sortOption === "name-desc"){
       return b.name.localeCompare(a.name);
     }
-    if(sortOption === "year-asc"){
-      return a.year - b.year;
+    if(sortOption === "recent-desc"){
+      return b.id - a.id;
     }
-    if(sortOption === "year-desc"){
-      return b.year - a.year;
+    if(sortOption === "recent-asc"){
+    return a.id - b.id;
     }
     return 0;
   });
@@ -458,7 +479,7 @@ function App(){
             <p>{graduatedStudents}</p>
           </div>
         </div>
-        <h2>STUDENT FORM</h2>
+        <h2 ref={studentFormRef}>STUDENT FORM</h2>
        <form onSubmit={handleSubmit} className="student-form">
         <div className="input-group">
          <input 
@@ -596,8 +617,8 @@ function App(){
         <div className="form-buttons">
          <button 
           type="submit"
-          className="add-button">
-          {isEditing ? "Update Student" : "Add Student"}
+          className="add-button" disabled={submitting}>
+            {submitting ? (isEditing ? "Updating..." : "Adding...") : (isEditing ? "Update Student" : "Add Student")}
          </button>
          {isEditing && (
           <button 
@@ -615,7 +636,7 @@ function App(){
         </p>
       )}
       {success && (
-        <p className="success-message">
+        <p ref={successMessageRef} className="success-message">
           {success}
         </p>
       )}
@@ -633,6 +654,8 @@ function App(){
         onChange={(e)=>setSortOption(e.target.value)}>
           <option value="name-asc">Name A-Z</option>
           <option value="name-desc">Name Z-A</option>
+          <option value="recent-desc">Most Recent</option>
+          <option value="recent-asc">Least Recent</option>
         </select>
       </div>
       {statusFilter && (
@@ -670,6 +693,31 @@ function App(){
           </p>
       )}
       </div>
+      {deleteConfirmId !== null && (
+        <div className="delete-modal-overlay">
+         <div className="delete-modal">
+          <h3>Confirm Delete</h3>
+           <p>Are you sure you want to delete this student?</p>
+             <div className="delete-modal-buttons">
+                <button
+                  className="delete-confirm-button"
+                  onClick={() => confirmDelete(deleteConfirmId)}
+                  disabled={deletingId === deleteConfirmId}
+                >
+                  {deletingId === deleteConfirmId ? "Deleting..." : "Delete"}
+               </button>
+
+                <button
+                 className="delete-cancel-button"
+                  onClick={() => setDeleteConfirmId(null)}
+                  disabled={deletingId === deleteConfirmId}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       {totalPages > 1 && (
         <div className="pagination">
           <button onClick={() => setCurrentPage(currentPage - 1)}
